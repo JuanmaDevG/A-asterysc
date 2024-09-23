@@ -14,6 +14,7 @@ AGUA=(173, 216, 230)
 ROCA=(110, 75, 48)
 AMARILLO=(120, 60, 50) 
 
+
 # ---------------------------------------------------------------------
 # Funciones
 # ---------------------------------------------------------------------
@@ -61,6 +62,20 @@ def inic(mapi):
     
     return cam
 
+def g(pos: Casilla, mapi: Mapa, padre: Nodo = None):
+    return mapi.mapa[pos.f][pos.c] + padre.g if padre is not None else 0
+
+# TODO: next few days
+def h(): # actual: Casilla, destino: Casilla, mapi: Mapa
+    return 0
+
+# TODO: finish this function
+def a_star(mapi: Mapa, origen: Casilla, destino: Casilla, camino: Array) : # -> coste, kcal
+    in_list = []
+    f_list = [Nodo(origen, g(pos, mapi), h())]
+    
+    while f_list:
+    
         
 # función principal
 def main():
@@ -113,8 +128,7 @@ def main():
                     else:
                         camino=inic(mapi)
                         if pulsaBoton(mapi, pos)==1:
-                            ###########################                                                 
-                            #coste, cal=llamar a A estrella             
+                            coste, cal = a_star(mapi, origen, destino, camino)
                             if coste==-1:
                                 print('Error: No existe un camino válido entre origen y destino')
                         else:
