@@ -2,6 +2,7 @@ import sys, pygame
 from casilla import *
 from mapa import *
 from pygame.locals import *
+from heapq import heappop, heappush
 
 
 MARGEN=5
@@ -21,12 +22,7 @@ AMARILLO=(120, 60, 50)
 
 # Devuelve si una casilla del mapa se puede seleccionar como destino o como origen
 def bueno(mapi, pos):
-    res= False
-    
-    if mapi.getCelda(pos.getFila(),pos.getCol())==0 or mapi.getCelda(pos.getFila(),pos.getCol())==4 or mapi.getCelda(pos.getFila(),pos.getCol())==5:
-       res=True
-    
-    return res
+    return mapi.getCelda(*pos.toTuple()) in [ID_HIERBA, ID_AGUA, ID_ROCA]
     
 # Devuelve si una posición de la ventana corresponde al mapa
 def esMapa(mapi, posicion):
@@ -62,20 +58,48 @@ def inic(mapi):
     
     return cam
 
+def getkcal(cellId: int):
+    return {ID_HIERBA: KCAL_HIERBA, ID_AGUA: KCAL_AGUA, ID_ROCA: KCAL_ROCA}[cellId]
+
+def getFrontier(padre: Nodo, mapi: Mapa, in_list: list) -> [Nodo]:
+    frontier = []
+    for pos in padre.pos.getFrontier() :
+        if pos.fila < mapi.alto and pos.col < mapi.ancho and pos.col >= 0 and pos.fila >= 0 and mapi.getCelda(*pos.toTuple()) != ID_MURO :
+            frontier.append(Nodo(pos, g(pos, mapi, padre), h(), getkcal(mapi.getCelda(*pos.toTuple())), padre))
+    return frontier
+
 def g(pos: Casilla, mapi: Mapa, padre: Nodo = None):
-    return mapi.mapa[pos.f][pos.c] + padre.g if padre is not None else 0
+    if padre is not None :
+        return 1.5 if padre.pos.col - pos.col + padre.pos.fila - pos.fila in [2, 0, -2] else 1 + padre.g # Diagonal: 1.5, No diagonal: 1
+    else :
+        return 0 # Orphan position is initial
 
 # TODO: next few days
 def h(): # actual: Casilla, destino: Casilla, mapi: Mapa
     return 0
 
-# TODO: finish this function
-def a_star(mapi: Mapa, origen: Casilla, destino: Casilla, camino: Array) : # -> coste, kcal
+def a_star(mapi: Mapa, origen: Casilla, destino: Casilla, camino: list) : # -> coste, kcal
     in_list = []
-    f_list = [Nodo(origen, g(pos, mapi), h())]
+    f_list = [Nodo(origen, g(pos, mapi), h(), getkcal(mapi.getCelda(origen.toTuple())))]
     
     while f_list:
-    
+        n = heappop(f_list)
+        if n.pos == destino :
+            m = n
+            while m != None :
+                camino[m.pos.fila][m.pos.col] = 'x'
+                m = m.parent
+
+            return n.f, n.kcal
+        else :
+            n.children = getFrontier(n, mapi, in_list)
+
+            for fnode in n.children :
+                if fnode not in in_list:
+                    in_list.append(fnode)
+                elif fnode.f #TODO: FINISH THE FUNCTION, IS ALMOST THERE
+
+    return -1, -1 # No solution
         
 # función principal
 def main():

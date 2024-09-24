@@ -45,16 +45,10 @@ class Mapa():
     def setCelda(self, y, x, valor):
         self.mapa[y][x]=valor    
 
-    def getFrontier(self, padre: Nodo, g_func, h_func) -> [Nodo]:
-        frontier = []
-        for pos in nodo.pos.getFrontier():
-            frontier.append(Nodo(nodo.pos, g_func(nodo.pos, self, padre), h_func(), padre))
-        return frontier
-
 # ---------------------------------------------------------------------
-
 # Funciones
 # ---------------------------------------------------------------------
+
 def leer(archivo):
     mapa=[] 
     try:  
@@ -79,7 +73,6 @@ def leer(archivo):
         
     fich.close()
     return mapa
- 
 
 
 # ---------------------------------------------------------------------
