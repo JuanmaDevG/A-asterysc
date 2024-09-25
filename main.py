@@ -2,7 +2,7 @@ import sys, pygame
 from casilla import *
 from mapa import *
 from pygame.locals import *
-from heapq import heappop, heappush
+from heapq import heappop, heappush, heapify
 
 
 MARGEN=5
@@ -61,12 +61,24 @@ def inic(mapi):
 def getkcal(cellId: int):
     return {ID_HIERBA: KCAL_HIERBA, ID_AGUA: KCAL_AGUA, ID_ROCA: KCAL_ROCA}[cellId]
 
-def getFrontier(padre: Nodo, mapi: Mapa, in_list: list) -> [Nodo]:
+def getFrontier(padre: Nodo, mapi: Mapa, f_list: list) -> [Nodo]:
     frontier = []
     for pos in padre.pos.getFrontier() :
         if pos.fila < mapi.alto and pos.col < mapi.ancho and pos.col >= 0 and pos.fila >= 0 and mapi.getCelda(*pos.toTuple()) != ID_MURO :
-            frontier.append(Nodo(pos, g(pos, mapi, padre), h(), getkcal(mapi.getCelda(*pos.toTuple())), padre))
+            hijo = Nodo(pos, g(pos, mapi, padre), h(), getkcal(mapi.getCelda(*pos.toTuple())), padre)
+            if hijo not in f_list :
+                frontier.append(hijo)
     return frontier
+
+# Returns -1 if the index is not found instead of throwing an exception
+def noexceptIndex(l: list, elem) -> int :
+    idx = 0
+    for obj in l :
+        if elem == obj :
+            return idx
+        idx += 1
+    
+    return -1 # Nothing found
 
 def g(pos: Casilla, mapi: Mapa, padre: Nodo = None):
     if padre is not None :
@@ -80,7 +92,7 @@ def h(): # actual: Casilla, destino: Casilla, mapi: Mapa
 
 def a_star(mapi: Mapa, origen: Casilla, destino: Casilla, camino: list) : # -> coste, kcal
     in_list = []
-    f_list = [Nodo(origen, g(pos, mapi), h(), getkcal(mapi.getCelda(origen.toTuple())))]
+    f_list = [Nodo(origen, g(origen, mapi), h(), getkcal(mapi.getCelda(*origen.toTuple())))]
     
     while f_list:
         n = heappop(f_list)
@@ -92,12 +104,16 @@ def a_star(mapi: Mapa, origen: Casilla, destino: Casilla, camino: list) : # -> c
 
             return n.f, n.kcal
         else :
-            n.children = getFrontier(n, mapi, in_list)
+            in_list.append(n)
+            n.children = getFrontier(n, mapi, f_list)
 
             for fnode in n.children :
-                if fnode not in in_list:
-                    in_list.append(fnode)
-                elif fnode.f #TODO: FINISH THE FUNCTION, IS ALMOST THERE
+                idx = noexceptIndex(f_list, fnode)
+                if idx == -1 :
+                    heappush(f_list, fnode)
+                elif fnode.f < f_list[idx].f :
+                    f_list[idx] = fnode
+                    heapify(f_list) # O(n)
 
     return -1, -1 # No solution
         

@@ -22,3 +22,9 @@ class Nodo:
     # WARNING: equals operator does NOT compare node quality (f, g, h, kcal) or inheritance
     def __eq__(self, other):
         return self.pos == other.pos
+
+    def __gt__(self, other):
+        return self.f > other.f
+
+    def __lt__(self, other):
+        return self.f < other.f
