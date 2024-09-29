@@ -45,7 +45,6 @@ def pulsaBoton(mapi, posicion):
        posicion[1] > mapi.getAlto()*(TAM+MARGEN)+MARGEN+10 and posicion[1] < MARGEN_INFERIOR+mapi.getAlto()*(TAM+MARGEN)+MARGEN:
         res=2
 
-    
     return res
    
 # Construye la matriz para guardar el camino
@@ -82,7 +81,7 @@ def noexceptIndex(l: list, elem) -> int :
 
 def g(pos: Casilla, mapi: Mapa, padre: Nodo = None):
     if padre is not None :
-        return 1.5 if padre.pos.col - pos.col + padre.pos.fila - pos.fila in [2, 0, -2] else 1 + padre.g # Diagonal: 1.5, No diagonal: 1
+        return (1.5 if padre.pos.col - pos.col + padre.pos.fila - pos.fila in [2, 0, -2] else 1) + padre.g # Diagonal: 1.5, No diagonal: 1
     else :
         return 0 # Orphan position is initial
 
@@ -232,7 +231,8 @@ def main():
         reloj.tick(40)
         
     pygame.quit()
-    
+
+
 #---------------------------------------------------------------------
 if __name__=="__main__":
     main()

@@ -45,6 +45,43 @@ class Mapa():
     def setCelda(self, y, x, valor):
         self.mapa[y][x]=valor    
 
+    # ---------------------------------
+    # Functions for debugging
+    # ---------------------------------
+
+    def whereis(self, p: Nodo | Casilla):
+        strmap = ""
+        y = 0; x = 0;
+        p = p.toTuple() if isinstance(p, Casilla) else p.pos.toTuple()
+        for l in self.mapa :
+            for obj_id in l :
+                strmap += "X " if p[0] == y and p[1] == x else ["  ", "# ", "? ", "D ", "~ ", "* "][obj_id]
+                x+=1
+            strmap += "\n"
+            x=0
+            y+=1
+        return strmap
+
+    def _isValid(self, y: int, x: int) -> bool:
+        return y >= 0 and y < self.alto and x >= 0 and x < self.ancho and self.mapa[y][x] != ID_MURO
+
+    def isValid(self, p = Casilla | Nodo | list) -> bool | list :
+        result = []
+        if isinstance(p, list) :
+            for obj in p :
+                result.append(self._isValid(*(obj.toTuple() if isinstance(obj, Casilla) else obj.pos.toTuple())))
+        else :
+            result = self._isValid(*(p.toTuple() if isinstance(p, Casilla) else p.pos.toTuple()))
+        return result
+
+    def viewExpansion(self, nodes: [Nodo]):
+        enctype = 'utf-8'
+        bytemap = bytearray(str(self).encode(enctype))
+        for n in nodes :
+            p = n.pos.col + (n.pos.fila * self.ancho * 2) + n.pos.fila # last sum is "+ \n characters
+            bytemap[p] = ord('x')
+        return bytemap.decode(enctype)
+
 # ---------------------------------------------------------------------
 # Funciones
 # ---------------------------------------------------------------------

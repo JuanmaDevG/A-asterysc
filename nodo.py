@@ -19,9 +19,12 @@ class Nodo:
     def __str__(self):
         return f'(position: {str(self.pos)}, f: {self.f}, g: {self.g}, h: {self.h}, parent: {self.parent.pos if self.parent != None else self.parent})'
 
+    def __repr__(self):
+        return f'({self.pos}, f = {self.f}, g = {self.g}, h = {self.h}, parent = {self.parent.pos if self.parent != None else None})'
+
     # WARNING: equals operator does NOT compare node quality (f, g, h, kcal) or inheritance
-    def __eq__(self, other):
-        return self.pos == other.pos
+    def __eq__(self, other: Nodo):
+        return other is not None and self.pos == other.pos
 
     def __gt__(self, other):
         return self.f > other.f

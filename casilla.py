@@ -22,6 +22,9 @@ class Casilla():
     def __eq__(self, other):
         return self.fila == other.fila and self.col == other.col
 
+    def __repr__(self):
+        return str(self.toTuple())
+
     def getFila (self) -> int:
         return self.fila
     
