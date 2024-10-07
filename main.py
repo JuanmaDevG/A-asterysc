@@ -1,4 +1,4 @@
-import sys, pygame
+import sys, pygame, math
 from casilla import *
 from mapa import *
 from pygame.locals import *
@@ -60,11 +60,11 @@ def inic(mapi):
 def getkcal(cellId: int):
     return {ID_HIERBA: KCAL_HIERBA, ID_AGUA: KCAL_AGUA, ID_ROCA: KCAL_ROCA}[cellId]
 
-def getFrontier(padre: Nodo, mapi: Mapa, f_list: list) -> [Nodo]:
+def getFrontier(padre: Nodo, mapi: Mapa, f_list: list, dst: Casilla) -> [Nodo]:
     frontier = []
     for pos in padre.pos.getFrontier() :
         if pos.fila < mapi.alto and pos.col < mapi.ancho and pos.col >= 0 and pos.fila >= 0 and mapi.getCelda(*pos.toTuple()) != ID_MURO :
-            hijo = Nodo(pos, g(pos, mapi, padre), h(), getkcal(mapi.getCelda(*pos.toTuple())), padre)
+            hijo = Nodo(pos, g(pos, mapi, padre), h_euclidean(pos, dst), getkcal(mapi.getCelda(*pos.toTuple())), padre)
             if hijo not in f_list :
                 frontier.append(hijo)
     return frontier
@@ -85,13 +85,22 @@ def g(pos: Casilla, mapi: Mapa, padre: Nodo = None):
     else :
         return 0 # Orphan position is initial
 
-# TODO: next few days
-def h(): # actual: Casilla, destino: Casilla, mapi: Mapa
-    return 0
+def h_manhattan(orig: Casilla, dst: Casilla):
+    return abs(orig.col - dst.col) + abs(orig.fila - dst.fila)
+
+
+def h_euclidean(orig: Casilla, dst: Casilla):
+    return math.sqrt(pow(orig.col - dst.col, 2) + pow(orig.fila - dst.fila, 2))
+
+
+# Devuelve la menor de las distancias, sea la horizontal o la vertical
+# Es menos admisible que la de manhattan o la euclidea porque es menos precisa
+def h_custom(orig: Casilla, dst: Casilla):
+    return min(abs(orig.fila - dst.fila), abs(orig.col - dst.col))
 
 def a_star(mapi: Mapa, origen: Casilla, destino: Casilla, camino: list) : # -> coste, kcal
     in_list = []
-    f_list = [Nodo(origen, g(origen, mapi), h(), getkcal(mapi.getCelda(*origen.toTuple())))]
+    f_list = [Nodo(origen, g(origen, mapi), h_euclidean(origen, destino), getkcal(mapi.getCelda(*origen.toTuple())))]
     
     while f_list:
         n = heappop(f_list)
@@ -104,7 +113,7 @@ def a_star(mapi: Mapa, origen: Casilla, destino: Casilla, camino: list) : # -> c
             return n.f, n.kcal
         else :
             in_list.append(n)
-            n.children = getFrontier(n, mapi, f_list)
+            n.children = getFrontier(n, mapi, f_list, destino)
 
             for fnode in n.children :
                 idx = noexceptIndex(f_list, fnode)
