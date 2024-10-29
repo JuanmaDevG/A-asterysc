@@ -60,12 +60,13 @@ def inic(mapi):
 def getkcal(cellId: int):
     return {ID_HIERBA: KCAL_HIERBA, ID_AGUA: KCAL_AGUA, ID_ROCA: KCAL_ROCA}[cellId]
 
+
 def getFrontier(padre: Nodo, mapi: Mapa, f_list: list, dst: Casilla) -> [Nodo]:
     frontier = []
     for pos in padre.pos.getFrontier() :
         if pos.fila < mapi.alto and pos.col < mapi.ancho and pos.col >= 0 and pos.fila >= 0 and mapi.getCelda(*pos.toTuple()) != ID_MURO :
             hijo = Nodo(pos, g(pos, mapi, padre), h_euclidean(pos, dst), getkcal(mapi.getCelda(*pos.toTuple())), padre)
-            if hijo not in f_list :
+            if hijo not in f_list and hijo.doesNotLoop():
                 frontier.append(hijo)
     return frontier
 
@@ -124,6 +125,11 @@ def a_star(mapi: Mapa, origen: Casilla, destino: Casilla, camino: list) : # -> c
                     heapify(f_list) # O(n)
 
     return -1, -1 # No solution
+
+
+def a_star_epsilon(mapi: Mapa, origen: Casilla, destino: Casilla, camino: list):
+    pass
+    #TODO: make the code
         
 # función principal
 def main():

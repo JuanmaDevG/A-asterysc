@@ -31,3 +31,14 @@ class Nodo:
 
     def __lt__(self, other):
         return self.f < other.f
+
+    def doesNotLoop(self):
+        if self.parent is None: return True
+        if self == self.parent: return False
+
+        p = self.parent
+        while p.parent is not None:
+            p = p.parent
+            if self == p:
+                return False #Does loop
+        return True
