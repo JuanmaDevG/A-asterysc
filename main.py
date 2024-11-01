@@ -14,6 +14,7 @@ MURO=(30, 70, 140)
 AGUA=(173, 216, 230) 
 ROCA=(110, 75, 48)
 AMARILLO=(255, 255, 50) 
+EPSILON=0.2
 
 
 # ---------------------------------------------------------------------
@@ -128,9 +129,34 @@ def a_star(mapi: Mapa, origen: Casilla, destino: Casilla, camino: list) : # -> c
 
 
 def a_star_epsilon(mapi: Mapa, origen: Casilla, destino: Casilla, camino: list):
-    pass
-    #TODO: make the code
-        
+    in_list = []
+    f_list = [Nodo(origen, g(origen, mapi), h_euclidean(origen, destino), getkcal(mapi.getCelda(*origen.toTuple())))]
+    focal_list = []
+    
+    while f_list:
+        n = heappop(f_list)
+        if n.pos == destino :
+            m = n
+            while m != None :
+                camino[m.pos.fila][m.pos.col] = 'x'
+                m = m.parent
+
+            return n.f, n.kcal
+        else :
+            in_list.append(n)
+            n.children = getFrontier(n, mapi, f_list, destino)
+
+            for fnode in n.children :
+                idx = noexceptIndex(f_list, fnode)
+                if idx == -1 :
+                    heappush(f_list, fnode)
+                elif fnode.f < f_list[idx].f :
+                    f_list[idx] = fnode
+                    heapify(f_list) # O(n)
+
+    return -1, -1 # No solution
+
+
 # función principal
 def main():
     pygame.init()    
