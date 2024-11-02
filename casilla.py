@@ -25,6 +25,9 @@ class Casilla():
     def __repr__(self):
         return str(self.toTuple())
 
+    def __hash__(self):
+        return hash((self.fila, self.col))
+
     def getFila (self) -> int:
         return self.fila
     

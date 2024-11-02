@@ -1,7 +1,16 @@
 from __future__ import annotations
 from casilla import *
 
+
 class Nodo:
+    def setRegularCmpMode():
+        Nodo.__gt__ = lambda x,y: x.f > y.f
+        Nodo.__lt__ = lambda x,y: x.f < y.f
+
+    def setEpsilonCmpMode():
+        Nodo.__gt__ = lambda x,y: x.kcal > y.kcal
+        Nodo.__lt__ = lambda x,y: x.kcal < y.kcal
+
     def __init__(self, pos: Casilla, g, h, kcal: int, parent: Nodo = None):
         self.pos = pos
         self.f = g + h

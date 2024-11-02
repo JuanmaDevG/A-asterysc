@@ -62,12 +62,12 @@ def getkcal(cellId: int):
     return {ID_HIERBA: KCAL_HIERBA, ID_AGUA: KCAL_AGUA, ID_ROCA: KCAL_ROCA}[cellId]
 
 
-def getFrontier(padre: Nodo, mapi: Mapa, f_list: list, dst: Casilla) -> [Nodo]:
+def getFrontier(padre: Nodo, mapi: Mapa, f_list: list, in_list: list, dst: Casilla) -> [Nodo]:
     frontier = []
     for pos in padre.pos.getFrontier() :
         if pos.fila < mapi.alto and pos.col < mapi.ancho and pos.col >= 0 and pos.fila >= 0 and mapi.getCelda(*pos.toTuple()) != ID_MURO :
             hijo = Nodo(pos, g(pos, mapi, padre), h_euclidean(pos, dst), getkcal(mapi.getCelda(*pos.toTuple())), padre)
-            if hijo not in f_list and hijo.doesNotLoop():
+            if hijo not in f_list and hijo.pos not in in_list and hijo.doesNotLoop():
                 frontier.append(hijo)
     return frontier
 
@@ -101,7 +101,8 @@ def h_custom(orig: Casilla, dst: Casilla):
     return min(abs(orig.fila - dst.fila), abs(orig.col - dst.col))
 
 def a_star(mapi: Mapa, origen: Casilla, destino: Casilla, camino: list) : # -> coste, kcal
-    in_list = []
+    Nodo.setRegularCmpMode()
+    in_list = {}
     f_list = [Nodo(origen, g(origen, mapi), h_euclidean(origen, destino), getkcal(mapi.getCelda(*origen.toTuple())))]
     
     while f_list:
@@ -114,8 +115,8 @@ def a_star(mapi: Mapa, origen: Casilla, destino: Casilla, camino: list) : # -> c
 
             return n.f, n.kcal
         else :
-            in_list.append(n)
-            n.children = getFrontier(n, mapi, f_list, destino)
+            in_list[n.pos] = n
+            n.children = getFrontier(n, mapi, f_list, in_list, destino)
 
             for fnode in n.children :
                 idx = noexceptIndex(f_list, fnode)
@@ -129,12 +130,13 @@ def a_star(mapi: Mapa, origen: Casilla, destino: Casilla, camino: list) : # -> c
 
 
 def a_star_epsilon(mapi: Mapa, origen: Casilla, destino: Casilla, camino: list):
-    in_list = []
-    f_list = [Nodo(origen, g(origen, mapi), h_euclidean(origen, destino), getkcal(mapi.getCelda(*origen.toTuple())))]
-    focal_list = []
+    Nodo.setEpsilonCmpMode()
+    in_list = {}
+    f_list = []
+    focal_list = [Nodo(origen, g(origen, mapi), h_euclidean(origen, destino), getkcal(mapi.getCelda(*origen.toTuple())))]
     
-    while f_list:
-        n = heappop(f_list)
+    while focal_list:
+        n = heappop(focal_list) # Kcal heuristic based pop
         if n.pos == destino :
             m = n
             while m != None :
@@ -143,16 +145,29 @@ def a_star_epsilon(mapi: Mapa, origen: Casilla, destino: Casilla, camino: list):
 
             return n.f, n.kcal
         else :
-            in_list.append(n)
-            n.children = getFrontier(n, mapi, f_list, destino)
+            in_list[n.pos] = n
+            n.children = getFrontier(n, mapi, f_list, in_list, destino)
 
+            # Add children to frontier list
+            Nodo.setRegularCmpMode()
             for fnode in n.children :
                 idx = noexceptIndex(f_list, fnode)
                 if idx == -1 :
                     heappush(f_list, fnode)
                 elif fnode.f < f_list[idx].f :
                     f_list[idx] = fnode
-                    heapify(f_list) # O(n)
+                    heapify(f_list)
+            Nodo.setEpsilonCmpMode()
+            if not f_list: continue
+
+            # Add elements to focal list
+            min_node = f_list[0]
+            i = 0
+            while i < len(f_list):
+                if f_list[i].f <= ((1 + EPSILON) * min_node.f):
+                    heappush(focal_list, f_list.pop(i))
+                    i -= 1
+                i+= 1
 
     return -1, -1 # No solution
 
@@ -212,8 +227,7 @@ def main():
                             if coste==-1:
                                 print('Error: No existe un camino válido entre origen y destino')
                         else:
-                            ###########################                                                   
-                            #coste, cal=llamar a A estrella subepsilon                       
+                            coste, cal = a_star_epsilon(mapi, origen, destino, camino)
                             if coste==-1:
                                 print('Error: No existe un camino válido entre origen y destino')
                             
